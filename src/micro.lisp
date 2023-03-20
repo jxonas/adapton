@@ -1,15 +1,28 @@
 
 (defpackage #:adapton.micro
-  (:use #:cl #:adapton.utils)
+  (:use #:cl)
   (:local-nicknames (#:u #:serapeum/bundle))
-  (:export #:cell
-           #:set-cell!
-           #:compute
+  (:export #:compute
+           #:ref
+           #:ref-set!
+           #:adapton?
            #:make-athunk
            #:+edge!
            #:-edge!))
 
 (in-package #:adapton.micro)
+
+;; =================================================================================================
+;; Sets
+;; =================================================================================================
+
+(u:define-constant empty-set '())
+
+(defmacro set-insert (element set)
+  `(pushnew ,element ,set :test #'eq))
+
+(defmacro set-remove (element set)
+  `(u:removef ,set ,element :test #'eq))
 
 ;; =================================================================================================
 ;; MicroAdapton
@@ -23,7 +36,7 @@
             (:constructor %make-adapton)
             (:predicate adapton?)
             (:print-object (lambda (a stream)
-                             (format stream "#<A ~:[! ~A~;~A~]>"
+                             (format stream "#<~:[! ~A~;~A~]>"
                                      (%clean? a)
                                      (%result a)))))
   (thunk nil :read-only t)
@@ -59,7 +72,7 @@
     (dolist (super (%super a))
       (%dirty! super))))
 
-(defun cell (value)
+(defun ref (value)
   (let (a)
     (setf a (%make-adapton
              :thunk (lambda () (%result a))
@@ -68,6 +81,11 @@
              :super empty-set
              :clean? t))))
 
-(defun set-cell! (cell value)
-  (setf (%result cell) value)
-  (%dirty! cell))
+(defun ref-set! (ref value)
+  (with-accessors ((result %result)) ref
+    (cond
+      ((eq result value) (values value nil))
+      (t
+       (setf result value)
+       (%dirty! ref)
+       (values value t)))))

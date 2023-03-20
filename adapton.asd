@@ -4,12 +4,12 @@
   :description "Language-based semantics for general-purpose incremental computation."
   :author "Jonas Oliveira Rodrigues <jonas.rodrigues@unisoma.com>"
   :license "MIT"
-  :depends-on ("serapeum"
+  :depends-on ("atomics"
+               "serapeum"
                "trivial-garbage")
   :components ((:module "src"
                 :components
-                ((:file "utils")
-                 (:file "micro")
+                ((:file "micro")
                  (:file "mini"))))
   :description ""
   :in-order-to ((test-op (test-op "adapton/test"))))
