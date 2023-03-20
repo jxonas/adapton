@@ -21,6 +21,5 @@
   :depends-on ("adapton" "fiveam")
   :components ((:module "t"
                 :components
-                (#+nil(:file "main"))))
-  :perform (test-op (o c) (symbol-call :5am :run! :adapton)))
-
+                ((:file "main"))))
+  :perform (test-op (o c) (symbol-call :adapton.tests :run-tests)))
