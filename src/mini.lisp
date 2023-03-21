@@ -28,20 +28,15 @@
       ((forms decls doc (u:parse-body body :documentation t))
        (required optional rest keys (u:parse-ordinary-lambda-list lambda-list))
        (argvars `(,@required ,@(mapcar #'car optional) ,@(u:unsplice rest) ,@(mapcan #'car keys))))
-    (u:with-gensyms (cache code key entry found?)
-      `(let ((,cache (trivial-garbage:make-weak-hash-table
-                      :test #'equal
-                      :weakness :key
-                      :weakness-matters nil)))
+    (u:with-gensyms (cache code)
+      `(let ((,cache (trivial-garbage:make-weak-hash-table :test #'equal :weakness :key)))
          (labels ((,code ,lambda-list
                     ,@(u:unsplice doc)
                     ,@decls
-                    (let ((,key ,(if (= 1 (list-length argvars)) (car argvars) `(list ,@argvars))))
-                      (multiple-value-bind (,entry ,found?)
-                          (gethash ,key ,cache)
-                        (force (if ,found? ,entry
-                                   (setf (gethash ,key ,cache)
-                                         (adapt (block ,name ,@forms)))))))))
+                    (force (u:ensure-gethash
+                            ,(if (= 1 (list-length argvars)) (car argvars) `(list ,@argvars))
+                            ,cache
+                            (adapt (block ,name ,@forms))))))
            ,@(u:unsplice (when name `(u:defalias ,name #',code)))
            #',code)))))
 
